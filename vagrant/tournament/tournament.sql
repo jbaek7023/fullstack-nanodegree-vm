@@ -12,9 +12,7 @@ CREATE DATABASE tournament;
 
 CREATE TABLE players (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(20) NOT NULL,
-    win INTEGER DEFAULT 0,
-    matches INTEGER DEFAULT 0
+    name VARCHAR(20) NOT NULL
 );
 
 CREATE TABLE matches (

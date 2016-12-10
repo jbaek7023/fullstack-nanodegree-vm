@@ -19,18 +19,16 @@ def connect(database_name="tournament"):
 def deleteMatches():
     """Remove all the match records from the database."""
     db, cursor = connect()
-    query_delete_match = "DELETE FROM matches"
-    query_update_player = "UPDATE players SET matches=0, win=0"
-
+    query_delete_match = "TRUNCATE matches CASCADE"
+    
     cursor.execute(query_delete_match)
-    cursor.execute(query_update_player)
     db.commit()
     db.close()
 
 def deletePlayers():
     """Remove all the player records from the database."""
     db, cursor = connect()
-    query = "DELETE FROM players"
+    query = "TRUNCATE players CASCADE"
     cursor.execute(query)
     db.commit()
     db.close()
@@ -82,7 +80,11 @@ def playerStandings():
         matches: the number of matches the player has played
     """
     db, cursor = connect()
-    query_select_by_win = "SELECT * from players ORDER BY win;"
+
+    #SELECT player's id, player's.name, how many times the player won, how many time the player matched 
+    query_select_by_win = "SELECT players.id, players.name, (SELECT count(matches.winner) FROM matches WHERE players.id = matches.winner) as wins, (SELECT count(*) FROM matches WHERE players.id = matches.winner OR players.id = matches.loser) AS matches FROM players ORDER BY wins;"
+
+    # query_select_by_win = "SELECT * from players ORDER BY win;"
     cursor.execute(query_select_by_win)
     
     output = cursor.fetchall()
@@ -100,16 +102,10 @@ def reportMatch(winner, loser):
     db, cursor = connect()
     #
     query_1 = "INSERT INTO matches(winner, loser) VALUES (%s, %s);"
-    query_2 = "UPDATE players SET win = win + 1 WHERE id = %s;"
-    query_3 = "UPDATE players SET matches = matches +1 WHERE id= %s OR id = %s;"
-
-    param_w_l = (winner, loser,)
-    param_w = (winner,)
+    param = (winner, loser,)
 
     #execute the query
-    cursor.execute(query_1, param_w_l)
-    cursor.execute(query_2, param_w)
-    cursor.execute(query_3, param_w_l)
+    cursor.execute(query_1, param)
 
     db.commit()
     db.close()
@@ -132,10 +128,7 @@ def swissPairings():
     db, cursor = connect()
     
     #get players record
-    query = "SELECT * FROM players ORDER BY win"
-    cursor.execute(query)    
-
-    the_list = cursor.fetchall()
+    the_list = playerStandings()
 
     output =[]
     player_a_id=""
